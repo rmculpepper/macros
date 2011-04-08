@@ -1,0 +1,411 @@
+_Macros_: Useful macros and macro-writing utilities
+===================================================
+
+By Ryan Culpepper
+(ryanc at plt-scheme dot org)
+
+This package provides useful syntactic extensions (macros) as well as
+procedures helpful for writing macros.
+
+_struct.ss_: Defining struct types
+==================================
+
+Imported with:
+  (require (planet "struct.ss" ("ryanc" "macros.plt" 1)))
+
+PLT Scheme struct types created with 'make-struct-type' may have
+user-defined properties, immutable fields, and automatic field
+values. They may also act as procedures. This package defines a macro
+that provides access to these features with the convenience of
+'define-struct'.
+
+> define-struct* SYNTAX
+
+  (define-struct* name (field-spec ...) struct-option ...)
+
+  field-spec is one of:
+    - field-name
+    - (field-name (field-flag ...))
+    - (field-name (field-flag ...) accessor-name mutator-name)
+
+  field-flag is one of:
+    - #:immutable
+    - #:auto
+
+  struct-option is one of:
+    - (#:super super-struct-name)
+    - (#:super-struct struct-type-descriptor-expr)
+    - (#:auto-value expr)
+    - (#:property key-expr value-expr)
+    - (#:inspector expr)
+    - #:transparent
+    - (#:procedure procedure-expr)
+    - (#:procedure-field field-name)
+    - (#:guard guard-expr)
+
+  The 'define-struct*' form defines static struct information, a
+  struct type descriptor, a predicate, a constructor, field accessors,
+  and field mutators like 'define-struct', with the following
+  exceptions and modifications:
+
+  Field accessors and mutators follow the standard naming convention
+  '<struct>-<field>' and 'set-<struct>-<field>!' by default, unless
+  specific names are given in the field-spec.
+
+  Fields with the '#:immutable' flag are immutable.
+
+  Fields with the '#:auto' flag have automatic values. The constructor
+  does not take an argument for an auto field. A non-auto field may
+  not follow an auto field.
+
+  'define-struct*' provides two ways of creating a substruct.  You may
+  supply the name of the super struct (which must be in scope and
+  bound to the static struct info created by 'define-struct' or
+  'define-struct*') in a '#:super' declaration, or you may use the
+  '#:super-struct' option and provide the super struct type descriptor
+  (usually named 'struct:<name>') as a value.
+
+  The '#:auto-value' option determines the value assigned to auto
+  fields when an instance is created.
+
+  Each '#:property' declaration adds a property key-value pair to the
+  struct type.
+
+  The '#:inspector' declaration determines the inspector that
+  controlls access to the struct. The '#:transparent' declaration is
+  equivalent to an inspector of #f: the resulting struct is
+  transparent to all inspectors.
+
+  Instances of the struct type can be made to act as procedures in one
+  of two ways: the '#:procedure' option or the '#:procedure-field'
+  option.
+
+  The '#:procedure' declaration takes a single procedure to use for
+  all instances. The procedure is passed n+1 arguments, where the
+  first argument is the instance and the other n arguments are from
+  the application.
+
+  The '#:procedure-field' declaration must be followed by a field
+  name; applying the struct to n arguments is equivalent to applying
+  that field of the struct to those n arguments.
+
+  The '#:guard' declaration controls the creation of substructs.
+
+> define-struct-property SYNTAX
+
+  (define-struct-property name)
+
+  Defines 'name' as a struct property, 'name?' as a predicate for
+  struct types and instances, and 'name-value' as an accessor for
+  struct types and instances that have that property.
+
+> define-struct-like SYNTAX
+
+  (define-struct-like name (field ...) expr)
+
+  Sometimes it is useful to associate additional attributes with an
+  existing datatype rather than create a new struct type that directly
+  incorporates those attributes as fields. 'define-struct-like'
+  provides a struct-like convenience interface for this pattern by
+  creating a weak hashtable mapping struct "representatives" to their
+  extended attributes.
+
+  The constructor takes a value for each field and returns the result
+  of the representative expression. Each execution of 'expr' should
+  result in a newly-allocated value. If 'expr' returns a
+  representative value already in the backing hashtable, the
+  constructor raises an error.
+
+  The predicate recognizes representatives created through the
+  constructor.
+
+  The field accessors and mutators modify the extra attributes. They
+  do not affect the representative.
+
+  This form does not define match-compatible static information. It
+  may in a later version.
+
+
+_stx.ss_: Syntax utilities
+==========================
+
+Imported with: 
+  (require (planet "stx.ss" ("ryanc" "macros.plt" 1)))
+
+but more often with:
+  (require-for-syntax (planet "stx.ss" ("ryanc" "macros.plt" 1)))
+
+The "stx.ss" module contains procedures and syntactic forms useful for
+implementing macros (thus the use of 'require-for-syntax' above).
+
+In addition, "stx.ss" re-exports everything provided from
+(lib "stx.ss" "syntax"), so you do not need to import both.
+
+> stx-caar : syntax -> syntax
+> stx-cadr : syntax -> syntax
+> stx-cdar : syntax -> syntax
+> stx-cddr : syntax -> syntax
+
+  Accessors for syntax-lists.
+
+> stx-keyword? : any -> boolean
+> stx-string? : any -> boolean
+> stx-bytes? : any -> boolean
+> stx-vector? : any -> boolean
+> stx-number? : any -> boolean
+> stx-exact? : any -> boolean
+> stx-inexact? : any -> boolean
+> stx-rational? : any -> boolean
+> stx-real? : any -> boolean
+> stx-integer? : any -> boolean
+> stx-positive-integer? : any -> boolean
+> stx-nonnegative-integer? : any -> boolean
+> stx-boolean? : any -> boolean
+> stx-true? : any -> boolean
+> stx-false? : any -> boolean
+> stx-nonfalse? : any -> boolean
+
+  Predicates on the contents of syntax objects. For example:
+
+    (stx-keyword? #'#:kw) = #t
+    (stx-string? #'"here") = #t
+    (stx-number? #'10.3) = #t
+
+  Note: 'stx-integer?', 'stx-positive-integer?', and
+  'stx-nonnegative-integer?' only return true on exact integers, in
+  contrast to 'integer?', which also returns true for inexact
+  integers.
+
+> check-stx-keyword : symbol any -> void or raises error
+> check-stx-string : symbol any -> void or raises error
+> check-stx-bytes : symbol any -> void or raises error
+> check-stx-vector : symbol any -> void or raises error
+> check-stx-number : symbol any -> void or raises error
+> check-stx-exact : symbol any -> void or raises error
+> check-stx-inexact : symbol any -> void or raises error
+> check-stx-rational : symbol any -> void or raises error
+> check-stx-real : symbol any -> void or raises error
+> check-stx-integer : symbol any -> void or raises error
+> check-stx-positive-integer : symbol any -> void or raises error
+> check-stx-nonnegative-integer : symbol any -> void or raises error
+> check-stx-boolean : symbol any -> void or raises error
+> check-stx-true : symbol any -> void or raises error
+> check-stx-false : symbol any -> void or raises error
+> check-stx-nonfalse : symbol any -> void or raises error
+
+  The check procedures raise an error if the given value is not a
+  syntax object containing the expected kind of data. The symbol is
+  used as the first argument to 'raise-syntax-error'.
+
+> stx-keyword-value : syntax -> keyword
+> stx-string-value : syntax -> string
+> stx-bytes-value : syntax -> bytes
+> stx-number-value : syntax -> number
+> stx-boolean-value syntax -> boolean
+
+  These procedures check that their argument is a syntax object
+  containing the expected kind of data and extract that data.
+
+    (stx-string-value #'"here") = "here"
+    (stx-number-value #'5) = 5
+    (stx-number-value #'x) raises exception
+
+  These procedures are equivalent to syntax-e plus error-checking.
+
+> type symbollike = symbol | string | keyword | identifier
+
+> symbol-append : symbollike ... -> symbol
+
+  This procedure takes any number of symbol-like values (symbols,
+  identifiers, and strings) and concatenates them, returning the
+  result as a symbol.
+
+    (sym+ #'name '- #'field) = 'name-field
+
+> literal-identifier=? : identifier identifier -> boolean
+
+  Returns true if the symbols contained in the two identifiers are
+  the same.
+
+> syntax-matches-pattern SYNTAX
+
+  (syntax-matches-pattern stx keywords pattern1 pattern2 ...)
+
+  Returns true if the syntax object 'stx' matches any of the
+  patterns; returns false otherwise.
+
+> with-syntax* SYNTAX
+
+  (with-syntax* ([pattern expr] ...) . body)
+
+  Like with-syntax, but the scope of pattern variables includes the
+  right-hand sides of subsequent bindings.
+
+    (with-syntax* ([(temp ...) (generate-temporaries the-variables)]
+                   [(index ...) (iota (length (syntax->list the-variables)))]
+                   [(index-binding ...) #'([temp index] ...)])
+      ___)
+
+
+_qd.ss_: "Quick and Dirty" inspection
+=====================================
+
+Imported with:
+  (require (planet "qd.ss" ("ryanc" "macros.plt" 1)))
+
+The "qd.ss" module provides special forms useful for interactive
+debugging of syntax bindings, such as those introduced by
+define-struct. Please don't use this library in real code.
+
+> syntax-local-value/quote SYNTAX
+> syntax-local-value/quote-syntax SYNTAX
+
+  These forms take an identifier bound by define-syntax or
+  let-syntax, look up its value in the syntactic environment, and
+  return it as a runtime expression as an s-expression or as a syntax
+  object.
+
+  Example:
+    (define-struct s (a b))
+    (syntax-local-value/quote s)
+      => a list of the predicate, accessors, etc
+    (syntax-local-value/quote-syntax s)
+      => similar, but retains extra syntax object information
+
+> phase1-eval/quote SYNTAX
+> phase1-eval/quote-syntax SYNTAX
+
+  These forms simply evaluate their expression arguments at compile
+  time (and in the compile-time environment), returning the result as
+  an s-expression or as a syntax object.
+
+    (define-for-syntax the-box (box 10))
+    (phase1-eval/quote (begin0 (unbox the-box) (set-box! the-box 12)))
+      => 10
+
+> expand/stop SYNTAX
+
+  Expands the first argument (the expression) with the stop list
+  given by the second argument.
+
+    (expand/stop (when (and 1 2) (go!)) (and))
+    = #'(if (and 1 2) (begin (#%app (#%top . go!))))
+      ; because 'when' expands to 'if', and the 'and' stops expansion
+      ; of that subexpression, but the other subexpression gets fully
+      ; expanded
+
+> expand/stop-kernel SYNTAX
+
+  Like expand/stop, but also includes the mzscheme core syntactic
+  forms. The sequence of identifiers to stop on is optional.
+
+    (expand/stop-kernel (when (and 1 2) (go!)))
+    = (expand/stop-kernel (when (and 1 2) (go!)) ())
+    = #'(if (and 1 2) (begin (go!)))
+      ; because expansion stops on 'if'
+
+  See also the procedures exported by (lib "expand.ss" "macro-debugger").
+
+
+_class-iop.ss_: Macros for interface-oriented class programming
+===============================================================
+
+Import with:
+  (require (planet "class-iop.ss" ("ryanc" "macros.plt" 1)))
+
+The "class-iop.ss" module is designed to work with the standard class
+system from mzlib, (lib "class.ss").
+
+It adds interface-checking variants of 'send' as well as machinery for
+static interfaces and binding forms that help reduce checks.
+
+> define-interface SYNTAX
+
+  (define-interface name (method-name ...))
+
+  Defines 'name' as a static interface containing the given method
+  names. The name can also be used in any context that expects a
+  standard dynamic interface (as produced by the standard 'interface'
+  form).
+
+    (define-interface stack<%> (empty? push pop))
+    stack<%> 
+    => #<struct:interface:stack<%>>
+
+> define-static-interface SYNTAX
+
+  (define-static-interface name expression (method-name ...))
+
+  Defines a static interface binding that wraps the dynamic interface
+  value resulting from the expression.
+
+  Use this form only to wrap interfaces defined in other people's
+  code, like so:
+
+    (define-static-interface s-editor<%> editor<%>
+      (add-canvas add-undo adjust-cursor _____))
+
+  Use 'define-interface' when writing new code.
+
+> send: SYNTAX
+
+  (send: obj interface method argument ...)
+
+  A variant of the 'send' special form that performs two checks:
+    - the method being called is in the interface given
+    - the object the method is being called on supports that (entire)
+      interface (not just the particular method)
+
+  When the interface is a static interface (defined by
+  'define-interface'), the first check is done statically, rather than
+  a run time.
+
+  If a name is statically known to be bound to an instance of the
+  interface, then the second check is not performed at run time. See
+  the binding forms below.
+
+> send*: SYNTAX
+> send/apply: SYNTAX
+
+  (send*: obj interface (method arg ...) ...)
+  (send/apply: obj interface method arg ... arg-list)
+
+  Like the standard 'send*' and 'send/apply' but with interface
+  checks.
+
+> define: SYNTAX
+
+  There are two variants:
+
+  (define: name interface expression)
+
+  Defines 'name' as the result the expression, but first checks that
+  the result implements the given interface. The name is thereafter
+  considered trusted.
+
+  (define: (name argument ...) . body)
+  where each argument is either an identifier or (identifier : interface)
+
+  Defines a function with checked arguments; see 'lambda:' below.
+
+> lambda: SYNTAX
+
+  (lambda: (argument ...) . body)
+  where each argument is either an identifier or (identifier : interface)
+
+  Creates a function with (optionally) checked arguments. When the
+  function is applied, each argument with an interface is checked,
+  and thereafter those names are considered trusted.
+
+> init: SYNTAX
+> init-private: SYNTAX
+
+  (init: (name interface) ...)
+  (init-private: (name interface) ...)
+
+  Like 'init' and 'init-private:' but the values are checked during
+  initialization and the names are thereafter considered trusted.
+
+  The is no 'field:' form, as fields are mutable from outside the
+  class body, and the macro system is not powerful enough to enforce
+  the necessary invariant.
