@@ -1,11 +1,13 @@
-(module info (lib "infotab.ss" "setup")
-  (define name "macros")
-  (define blurb
-    '("Defines macros for struct definitions and interface-checked class programming. "
-      "Also provides utilities for macro writers."))
-  (define primary-file (list "struct.ss" "class-iop.ss" "stx.ss" "qd.ss"))
-  (define version "1.3")
-  (define doc.txt "doc.txt")
-  (define categories '(metaprogramming))
-  (define can-be-loaded-with 'all)
-  (define compile-omit-paths '("example" "experimental")))
+;; Copyright 2011 Ryan Culpepper
+;; Released under the terms of the LGPL version 3 or later.
+
+#lang setup/infotab
+(define name "macros")
+(define compile-omit-paths '())
+(define blurb
+  '("Defines macros for struct definitions and interface-checked class programming. "
+    "Also provides utilities for macro writers."))
+(define scribblings '(("scribblings/macros.scrbl" (multi-page))))
+(define categories '(metaprogramming))
+(define can-be-loaded-with 'all)
+(define required-core-version "5.1")
