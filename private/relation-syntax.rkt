@@ -20,8 +20,7 @@
 (define-syntax-class (fundep names)
   #:description "functional dependency signature"
   (pattern (name (~datum :)
-                 (~between arg 1 +inf.0
-                           #:too-few "expected at least one argument field name") ...
+                 arg ...
                  (~datum ->)
                  (~between res 1 +inf.0
                            #:too-few "expected at least one result field name") ...)
@@ -29,8 +28,7 @@
            #:declare arg (field-name names)
            #:declare res (field-name names))
   (pattern (name (~datum :)
-                 (~between arg 1 +inf.0
-                           #:too-few "expected at least one argument field name") ...
+                 arg ...
                  (~datum ->) #t)
            #:declare name proper-id
            #:declare arg (field-name names)
