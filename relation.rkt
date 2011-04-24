@@ -4,7 +4,6 @@
                      syntax/parse
                      "private/relation-syntax.rkt"))
 (provide define-relation
-         relation-add!
          relation-contains?
          relation?)
 
@@ -17,8 +16,6 @@
 (define-syntax (define-relation stx)
   (syntax-parse stx
     [(dr name0:id fl:field-list
-         (~optional (~seq #:allow-additions? update?:expr)
-                    #:defaults ([update? #'#f]))
          (~seq #:function (~var fn (fundep (syntax->list #'(fl.fld ...))))) ...
          (~var r (row (syntax->list #'(fl.fld ...)))) ...)
      (with-syntax ([(return-relation? relname ...)
@@ -28,7 +25,7 @@
                            #'(#t name0)])])
        #'(define-values (relname ... fn.name ...)
            (relation* (fl.fld ...)
-                      update?
+                      #f
                       [(fn.name (fn.arg ...) (fn.res ...)) ...]
                       [(r.e ...) ...]
                       return-relation?)))]))
@@ -227,23 +224,16 @@ todo: update? and not return-relation? makes no sense
 
 ;; ----
 
+#|
 (define (relation-add! rel row)
   (let ([update! (relation-updater rel)])
     (unless update!
       (error 'relation-add! "relation does not allow additions: ~e" rel))
     (update! (list->vector row))))
+|#
 
 (define (relation-contains? rel row)
   (and (hash-ref (relation-ht rel) (list->vector row) #f) #t))
-
-#|
-(define-relation nums (n d)
-  #:function (get-d : n -> d)
-  #:function (get-n : d -> n)
-  (0 "zero")
-  (1 "one")
-  (2 "two"))
-|#
 
 (define-relation _ (n d)
   #:function (get-d : n -> d)
