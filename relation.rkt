@@ -235,9 +235,13 @@ todo: update? and not return-relation? makes no sense
 (define (relation-contains? rel row)
   (and (hash-ref (relation-ht rel) (list->vector row) #f) #t))
 
+;; ----
+
+#|
 (define-relation _ (n d)
   #:function (get-d : n -> d)
   #:function (get-n : d -> n)
   (0 "zero")
   (1 "one")
   (2 "two"))
+|#
