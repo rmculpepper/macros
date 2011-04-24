@@ -2,19 +2,27 @@
 @(require scribble/manual
           scribble/struct
           scribble/eval
-          "config.rkt")
+          planet/scribble
+          planet/version
+          (for-label racket/base
+                     racket/contract
+                     (this-package-in lazy-require)
+                     (this-package-in relation)
+                     (this-package-in transformer)))
 
 @(define the-eval (make-base-eval))
 @(the-eval '(require "lazy-require.rkt" "relation.rkt"
                      (for-syntax racket/base "transformer.rkt")))
 
-@title[#:version (my-package-version)]{macros: Miscellaneous macros}
-@author[@author+email["Ryan Culpepper" "ryanc@racket-lang.org"]]
+@(define the-version
+   (format "~a.~a" (this-package-version-maj) (this-package-version-min)))
 
+@title[#:version the-version]{macros: Miscellaneous macros}
+@author[@author+email["Ryan Culpepper" "ryanc@racket-lang.org"]]
 
 @section{Lazy Require}
 
-@(my-defmodule lazy-require)
+@defmodule/this-package[lazy-require]
 
 @defform[(define-lazy-require-definer define-id mod-expr)
          #:contracts ([mod-expr module-path?])]{
@@ -38,7 +46,7 @@ arguments. The underlying procedure is cached, so
 
 @section{Relations}
 
-@(my-defmodule relation)
+@defmodule/this-package[relation]
 
 @defform/subs[#:literals (:)
               (define-relation rel-id (field-id ...)
@@ -105,7 +113,7 @@ the @racket[fn-id]s are still defined.
 
 @section{Transformers}
 
-@(my-defmodule transformer)
+@defmodule/this-package[transformer]
 
 @defproc[(id->expr-transformer [expr syntax?])
          (-> syntax? syntax?)]{
