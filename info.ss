@@ -7,7 +7,7 @@
 (define blurb
   '("Defines macros for struct definitions and interface-checked class programming. "
     "Also provides utilities for macro writers."))
-(define scribblings '(("scribblings/macros.scrbl" (multi-page))))
+(define scribblings '(("scribblings/macros.scrbl")))
 (define categories '(metaprogramming))
 (define can-be-loaded-with 'all)
 (define required-core-version "5.1")

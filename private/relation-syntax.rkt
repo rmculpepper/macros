@@ -42,12 +42,13 @@
 
 ;; ----
 
-(define (eq-able? x)
+(define (eqv-able? x)
   (or (boolean? x)
       (symbol? x)
       (keyword? x)
+      (char? x)
       (null? x)
-      (fixnum? x)))
+      (number? x)))
 
 (define (generate-temporary)
   (car (generate-temporaries '(g))))

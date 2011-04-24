@@ -34,7 +34,7 @@
 relation* performs the following optimizations:
 
 - If a function has one argument and all values in the relation for
-that field are eq-comparable constants, the function is implemented as
+that field are eqv?-comparable constants, the function is implemented as
 a case expression.
 
 todo: update? and not return-relation? makes no sense
@@ -59,7 +59,7 @@ todo: update? and not return-relation? makes no sense
             [const-fld-set-table                ;; sym => seteq/#f
              (let ([t (make-hasheq)])
                (for ([fld (in-list flds)])
-                 (hash-set! t fld (seteq)))
+                 (hash-set! t fld (seteqv)))
                t)]
             [rows ;; ((oe ...) ...)
              (for/list ([r (in-list (syntax->list #'(r ...)))]
@@ -69,7 +69,7 @@ todo: update? and not return-relation? makes no sense
                  (let-values ([(ee oe) (syntax-local-expand-expression e)])
                    (let ([const? 
                           (syntax-case ee (quote)
-                            [(quote d) (eq-able? (syntax->datum #'d)) #'d]
+                            [(quote d) (eqv-able? (syntax->datum #'d)) #'d]
                             [_ #f])])
                      (cond [const?
                             (let ([v (hash-ref const-fld-table fld #f)]
