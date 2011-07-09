@@ -6,6 +6,7 @@
           planet/version
           (for-label racket/base
                      racket/contract
+                     racket/runtime-path
                      (this-package-in lazy-require)
                      (this-package-in relation)
                      (this-package-in transformer)))
