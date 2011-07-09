@@ -10,4 +10,4 @@
 (define scribblings '(("scribblings/macros.scrbl")))
 (define categories '(metaprogramming))
 (define can-be-loaded-with 'all)
-(define required-core-version "5.1")
+(define required-core-version "5.1.1")
